@@ -109,6 +109,8 @@ int main(int argc, char *argv[])
         else if (ready_num == 0)
         { 
             // 超时
+            //在1秒之内没有任何文件描述符就绪时，才会进入该分支
+            //但如果有fd就绪，就不会进入该分支
         }
         else
         {
