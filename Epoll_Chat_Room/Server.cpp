@@ -107,9 +107,8 @@ int main(int argc, char *argv[])
             break;
         }
         else if (ready_num == 0)
-        { // 超时
-            check_timeout_clients(epoll_fd);
-            continue;
+        { 
+            // 超时
         }
         else
         {
@@ -205,6 +204,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        check_timeout_clients(epoll_fd);
     }
 
     // 7.close
@@ -274,7 +274,8 @@ void broadcast_message(int sender_fd, const char *message)
 void check_timeout_clients(int epoll_fd)
 {
     time_t now = time(NULL);
-    for (int i = client_count - 1; i >= 0; i--){
+    for (int i = client_count - 1; i >= 0; i--)
+    {
         if (now - clients[i].last_active > TIMEOUT) {
             printf("Kicking client %s (fd=%d) due to inactivity.\n",
                   clients[i].client_name, clients[i].client_fd);
