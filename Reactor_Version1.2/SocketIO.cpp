@@ -32,17 +32,18 @@ int SocketIO::sendn(const char *buffer, int len)
 }
 
 // 确定接收 len 字节的数据
-int SocketIO::recvn(char *buffer, int len)
-{
+int SocketIO::recvn(char *buffer, int len){
     int left = len;
     char *pbuffer = buffer;
-    while (left > 0)
-    {
+    while(left > 0){
         int ret = recv(_fd, pbuffer, left, 0);
-        if (ret < 0)
-        {
+        if(ret == -1 && errno == EINTR){
+            continue;
+        }else if(ret == -1){
             perror("recv");
-            return len - ret;
+            return len - left;
+        }else if(ret == 0){
+            return len - left;
         }
         left -= ret;
         pbuffer += ret;
