@@ -2,6 +2,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sstream>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 using std::ostringstream;
 
 TcpConnection::TcpConnection(int fd)
@@ -20,10 +23,16 @@ void TcpConnection::send(const string &message){
 string TcpConnection::receive(){
     char buffer[65536] = {0};
     int ret = _socketIO.readline(buffer, sizeof(buffer));
-    if(ret <= 0){
+    if(ret > 0){
+        return string(buffer, ret);
+    }else if(ret == 0){
+        return "";
+    }else{
+        if(errno == EAGAIN || errno == EWOULDBLOCK){
+            return "[NO_DATA]";
+        }
         return "";
     }
-    return string(buffer, ret);
 }
 
 string TcpConnection::toString() const{

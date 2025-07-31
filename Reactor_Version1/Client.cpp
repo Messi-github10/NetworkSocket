@@ -1,55 +1,69 @@
-#include <my_header.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#define SERVER_ADDR "0.0.0.0"
-#define SERVER_PORT 8000
-
-// 客户端
-int main(int argc, char *argv[]){
-    // 1.socket
-    int client_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(client_fd < 0){
-        perror("failed to get client_fd");
+int main()
+{
+    int clientfd = socket(AF_INET, SOCK_STREAM, 0);
+    if(clientfd < 0) {
+        perror("socket");
         return EXIT_FAILURE;
     }
 
-    // 2.connect
-    struct sockaddr_in client_addr;
-    memset(&client_addr, 0, sizeof(client_addr));
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
-    client_addr.sin_port = htons(SERVER_PORT);
+    struct sockaddr_in serveraddr;
+    memset(&serveraddr, 0, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_port = htons(8000);
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");//代表本机地址
 
-    int connect_ret = connect(client_fd, (struct sockaddr *)&client_addr, sizeof(client_addr));
-    if(connect_ret < 0){
-        perror("failed to connect");
-        close(client_fd);
+    int ret = connect(clientfd, (const struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    if(ret < 0) {
+        perror("connect");
+        close(clientfd);
         return EXIT_FAILURE;
     }
 
-    printf("Connect Success.\n");
+    printf("connect success\n");
 
-#if 0
+    //通过select监听clientfd和标准输入
+    fd_set readset;
+    FD_ZERO(&readset);
+    char buff[1024] = {0};
 
-    // 3.recv
-    char recv_message[1024] = {0};
-    int recv_ret = recv(client_fd, recv_message, sizeof(recv_message) - 1, 0);
-    if (recv_ret < 0)
-    {
-        perror("Client failed to receive message");
-        close(client_fd);
+    while(1) {
+        FD_ZERO(&readset);
+        FD_SET(clientfd, &readset);
+        FD_SET(STDIN_FILENO, &readset);
+
+        int nready = select(clientfd + 1, &readset, NULL, NULL, NULL);
+        printf("select nready %d\n", nready);
+
+        if(FD_ISSET(STDIN_FILENO, &readset)) {
+            //监听到了标准输入
+            memset(buff, 0, sizeof(buff));//注意: 要经常做,防止有一些脏数据影响结果
+            //注意：使用read接收数据时，会包含'\n'
+            ret = read(STDIN_FILENO, buff, sizeof(buff));
+            printf("read %d bytes.\n", ret);
+            //发送给服务器
+            ret = send(clientfd, buff, strlen(buff), 0);
+            printf("send %d bytes.\n", ret);
+        } 
+
+        if(FD_ISSET(clientfd, &readset)) {
+            //服务器给客户端发数据了
+            memset(buff, 0, sizeof(buff));//注意: 要经常做,防止有一些脏数据影响结果
+            ret = recv(clientfd, buff, sizeof(buff), 0);
+            if(ret == 0) {
+                break;
+            }
+            printf("recv from server: %s, %d bytes.\n", buff, ret);
+        }
     }
-    recv_message[recv_ret] = '\0';
-    printf("Client received message is [%s] from Server [%d] bytes.\n", recv_message, recv_ret);
-
-#endif
-
-    // 4.send
-    const char message[] = "Hello, I am Client!\n";
-    int send_ret = send(client_fd, message, strlen(message), 0);
-    printf("Client sent [%d] bytes.\n", send_ret);
-
-    // 5.close
-    close(client_fd);
-    
+    //断开连接
+    close(clientfd);
     return 0;
 }

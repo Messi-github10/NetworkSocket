@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 SocketIO::SocketIO(int fd)
 :_fd(fd)
@@ -32,9 +33,13 @@ int SocketIO::recvn(char *buffer, int len){
     char *pbuffer = buffer;
     while(left > 0){
         int ret = recv(_fd, pbuffer, left, 0);
-        if(ret < 0){
+        if(ret == -1 && errno == EINTR){
+            continue;
+        }else if(ret == -1){
             perror("recv");
-            return len - ret;
+            return len - left;
+        }else if(ret == 0){
+            return len - left;
         }
         left -= ret;
         pbuffer += ret;
@@ -45,26 +50,26 @@ int SocketIO::recvn(char *buffer, int len){
 // 一次获取一行数据
 // max表示的是一行数据的最大字节数
 // 最后一个字节存放 '\0'
-int SocketIO::readline(char *buffer, int max){
-    int left = max - 1;
+int SocketIO::readline(char *buffer, int maxlen){
+    int left = maxlen - 1;
     char *pbuffer = buffer;
     int total = 0;
     while (left > 0)
     {
-        int ret = recv(_fd, pbuffer, left, MSG_PEEK);
+        int ret = recvPeek(pbuffer, maxlen);
 
         // 在读取 ret 个字节中查找'\n'
         for(int i = 0; i < ret; i++){
             if(pbuffer[i] == '\n'){
                 // 找到 '\n'
                 int size = i + 1;
-                int recvn_ret = recvn(pbuffer, size);
-                if(recvn_ret <= 0){
+                ret = recvn(pbuffer, size);
+                if(ret <= 0){
                     perror("recvn");
                     return ret;
                 }
                 pbuffer[i] = '\0';
-                total += i;
+                total += ret;
                 return total;
             }
         }
@@ -73,6 +78,20 @@ int SocketIO::readline(char *buffer, int max){
         ret = recvn(pbuffer, ret);
         left -= ret;
         pbuffer += ret;
+        total += ret;
     }
-    return max - 1;
+    buffer[maxlen - 1] = '\0';
+    return maxlen - 1;
+}
+
+// 查看套接字接收缓冲区中的数据，但不从缓冲区移除这些数据
+int SocketIO::recvPeek(char *buffer, int maxlen) const{
+    int ret = 0;
+    do{
+        ret = recv(_fd, buffer, maxlen, MSG_PEEK);
+    } while (ret == -1 && errno == EINTR);
+    if(ret < 0){
+        perror("recv");
+    }
+    return ret;
 }
