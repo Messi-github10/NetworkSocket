@@ -8,20 +8,32 @@
 #include <memory>
 #include <string>
 #include <functional>
+using std::enable_shared_from_this;
 using std::shared_ptr;
 using std::string;
 
+class EventLoop;
 class TcpConnection;
 using TcpConnectionPtr = shared_ptr<TcpConnection>;
 using TcpConnectionCallback = std::function<void(TcpConnectionPtr)>;
 
-class TcpConnection : public Noncopyable{
+class TcpConnection
+:public Noncopyable
+,public enable_shared_from_this<TcpConnection>
+{
 public:
     TcpConnection(int);
     ~TcpConnection();
     string receive();
     void send(const string &);
-    string toString() const;    // 获取五元组信息
+
+    // ---------- 新增广播功能 ---------
+    void setEventLoop(EventLoop *loop);
+    EventLoop* getEventLoop() const;
+    void broadcast(const string &message, const TcpConnectionPtr &excluede = nullptr);
+    // --------------------------------
+
+    string toString() const; // 获取五元组信息
     void shutdown();
     void setAllCallbacks(const TcpConnectionCallback &, const TcpConnectionCallback &, const TcpConnectionCallback &);
     void handleConnectionCallback();
@@ -39,6 +51,8 @@ private:
     InetAddress _localAddr;
     InetAddress _peerAddr;
     bool _isShutdownWrite;
+
+    EventLoop *_loop;
 
     TcpConnectionCallback _onConnection;
     TcpConnectionCallback _onMessage;

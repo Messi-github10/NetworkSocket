@@ -6,6 +6,8 @@
 #include <string>
 using std::string;
 
+#define BACKLOG 20000
+
 /*
 Acceptor类：连接器类。
 将所有基本操作全部封装到该类中。
@@ -14,12 +16,11 @@ Acceptor类：连接器类。
 
 class Acceptor{
 public:
-    Acceptor(unsigned short port);
     Acceptor(unsigned short port, const string &ip = "0.0.0.0");
     ~Acceptor() = default;
     void ready();
     int accept();
-    int fd() const;
+    int get_listen_fd() const;
 
 private:
     void setReuseAddr(bool);

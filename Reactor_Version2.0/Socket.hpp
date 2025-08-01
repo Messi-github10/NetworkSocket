@@ -15,7 +15,7 @@ public:
     Socket(int);
     ~Socket();
     void shutDownWrite();
-    int fd() const;
+    int get_fd() const;
 
 private:
     int _fd;
