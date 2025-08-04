@@ -23,7 +23,7 @@ public:
     void setAllCallback(TcpConnectionCallBack &&, TcpConnectionCallBack &&, TcpConnectionCallBack &&);
     const unordered_map<int, TcpConnectionPtr> &getConnections() const;
     int create_event_fd();  // 创建事件通知描述符
-    void handleRead();  // 处理 eventfd 的可读事件
+    void handleReadEvent();  // 处理 eventfd 的可读事件
     void wakeup();  // 唤醒因为epoll_wait阻塞的 I/O 线程
     void doPendingFunctors();   // 执行任务，将数据发给客户端
     void run_in_loop(Functor &&);   // 将一个任务（Functor）​安全地提交到 EventLoop 所在的 I/O 线程中执行
