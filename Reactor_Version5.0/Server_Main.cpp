@@ -7,8 +7,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-Threadpool threadpool(4, 10);
-
 class MyTask
 {
 public:
@@ -19,6 +17,10 @@ public:
 
     void process()
     {
+        if(_conn->isClosed()){
+            return;
+        }
+        
         cout << "MyTask is running..." << endl;
 
         // 解码 -> 计算 -> 编码
@@ -46,6 +48,10 @@ public:
             std::bind(&EchoServer::onClose, this, _1));
     }
 
+    ~EchoServer(){
+        _threadpool.stopThreadPool();
+    }
+
     void start(){
         _threadpool.startThreadPool();
         _tcp_server.start();
@@ -69,7 +75,7 @@ private:
 
         // MyTask
         MyTask mytask(message, tcp_connection_ptr);
-        threadpool.addTask(std::bind(&MyTask::process, mytask));
+        _threadpool.addTask(std::bind(&MyTask::process, mytask));
     }
 
     void onClose(TcpConnectionPtr tcp_connection_ptr)

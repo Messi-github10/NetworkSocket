@@ -69,7 +69,7 @@ int EventLoop::create_event_fd()
 }
 
 // 处理 eventfd 的可读事件
-void EventLoop::handleRead()
+void EventLoop::handleReadEvent()
 {
     // 它是一个 ​8 字节（uint64_t）的缓冲区
     // 用于接收 read() 从 eventfd 读取的计数器值
@@ -181,6 +181,9 @@ void EventLoop::wait_epoll_fd()
             if (cur_fd == _acceptor.get_listen_fd())
             {
                 handle_new_connection();
+            }else if(cur_fd == _event_fd){
+                handleReadEvent();
+                doPendingFunctors();
             }
             else
             {
@@ -197,9 +200,8 @@ void EventLoop::handle_new_connection()
 
     TcpConnectionPtr tcp_connection_ptr(new TcpConnection(peer_fd, this));
     tcp_connection_ptr->setEventLoop(this);
-    _conns.insert(std::make_pair(peer_fd, tcp_connection_ptr));
-
     tcp_connection_ptr->setAllCallBacks(_onConnection, _onMessage, _onClose);
+    _conns.insert(std::make_pair(peer_fd, tcp_connection_ptr));
     tcp_connection_ptr->handleConnectionCallBack();
 }
 
