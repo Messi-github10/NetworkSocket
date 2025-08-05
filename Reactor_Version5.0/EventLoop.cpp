@@ -184,13 +184,11 @@ void EventLoop::wait_epoll_fd()
             }
             else if (cur_fd == _event_fd)
             {
-                printf("187!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                 handleReadEvent(); // 线程池处理数据 -> 通知Reactor执行IO操作
                 doPendingFunctors();
             }
             else
             {
-                printf("193!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                 handle_message(cur_fd);
             }
         }
