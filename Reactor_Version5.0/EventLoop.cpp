@@ -199,7 +199,6 @@ void EventLoop::handle_new_connection()
     add_epoll_read_event(peer_fd);
 
     TcpConnectionPtr tcp_connection_ptr(new TcpConnection(peer_fd, this));
-    tcp_connection_ptr->setEventLoop(this);
     tcp_connection_ptr->setAllCallBacks(_onConnection, _onMessage, _onClose);
     _conns.insert(std::make_pair(peer_fd, tcp_connection_ptr));
     tcp_connection_ptr->handleConnectionCallBack();

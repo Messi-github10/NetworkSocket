@@ -25,12 +25,6 @@ public:
     ~TcpConnection();
     string receive();
     void send(const string &);
-    
-    // ---------- 新增广播功能 ---------
-    void setEventLoop(EventLoop *loop);
-    EventLoop* getEventLoop() const;
-    void broadcast(const string &message, const TcpConnectionPtr &excluede = nullptr);
-    // --------------------------------
 
     string toString() const;    // 获取五元组信息
     void shutdown();

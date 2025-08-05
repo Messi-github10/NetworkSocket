@@ -32,33 +32,6 @@ void TcpConnection::send(const string &message)
     _socketIO.sendn(message.c_str(), message.size());
 }
 
-void TcpConnection::setEventLoop(EventLoop *loop)
-{
-    _loop = loop;
-}
-
-EventLoop *TcpConnection::getEventLoop() const
-{
-    return _loop;
-}
-
-void TcpConnection::broadcast(const string &message, const TcpConnectionPtr &excluede)
-{
-    if (!_loop)
-    {
-        cout << "EventLoop pointer is null." << endl;
-        return;
-    }
-    const auto &connections = _loop->getConnections();
-    for (auto &it : connections)
-    {
-        if (!excluede || it.second != excluede)
-        {
-            it.second->send(message);
-        }
-    }
-}
-
 string TcpConnection::toString() const
 {
     ostringstream oss;
