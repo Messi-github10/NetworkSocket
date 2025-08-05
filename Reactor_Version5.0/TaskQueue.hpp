@@ -7,6 +7,7 @@
 #include <queue>
 using namespace std;
 
+// 任务队列类
 using ElemType = Task;
 class TaskQueue
 {
@@ -23,11 +24,11 @@ public:
 
     ~TaskQueue() = default;
 
-    bool full() const;
-    bool empty() const;
-    void push(ElemType);
-    ElemType pop();
-    void wakeUpAllThread();
+    bool full() const;  // 是否满
+    bool empty() const; // 是否空
+    void push(ElemType);    // 满则阻塞
+    ElemType pop();         // 空则阻塞
+    void wakeUpAllThread(); // 强制唤醒所有线程执行优雅退出
 
 private:
     queue<ElemType> _que;
@@ -35,7 +36,7 @@ private:
     MutexLock _mutex;
     Condition_va _notFull;
     Condition_va _notEmpty;
-    bool _is_stop;
+    bool _is_stop;  // 任务队列退出标志
 };
 
 #endif

@@ -12,10 +12,10 @@ class Threadpool{
 public:
     Threadpool(int, int);
     ~Threadpool() = default;
-    void startThreadPool();
-    void stopThreadPool();
+    void startThreadPool(); // 开启线程池
+    void stopThreadPool();  // 关闭线程池
     void addTask(Task &&);  // 移动语义：只传右值，提升效率
-    void doTask();
+    void doTask();  // 执行任务
 
 private:
     vector<unique_ptr<MyThread>> _threads;

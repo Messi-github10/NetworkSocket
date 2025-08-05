@@ -4,8 +4,10 @@
 #include "MutexLock.hpp"
 #include <pthread.h>
 
+// 条件变量
 class Condition_va{
 public:
+    // RAII原则
     Condition_va(MutexLock& mutex)
     :_mutex(mutex)
     {
@@ -16,9 +18,9 @@ public:
         pthread_cond_destroy(&_cond);
     }
 
-    void wait();
-    void notify_one();
-    void notify_all();
+    void wait();    // 调用 wait 的线程将会被阻塞
+    void notify_one();  // 唤醒一个线程
+    void notify_all();  // 唤醒全部线程
 
 private:
     MutexLock &_mutex;

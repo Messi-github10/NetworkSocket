@@ -4,6 +4,7 @@
 #include "MutexLock.hpp"
 #include <pthread.h>
 
+// 类似智能指针的互斥锁
 class SmartMutexLock{
 public:
 

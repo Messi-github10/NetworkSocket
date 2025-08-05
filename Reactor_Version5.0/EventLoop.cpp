@@ -9,14 +9,14 @@
 EventLoop::EventLoop(Acceptor &acceptor)
     : _epoll_fd(create_epoll_fd()),
       _event_fd(create_event_fd()),
-      _isLooping(false), 
-      _acceptor(acceptor), 
-      _ready_events(MAX_EVENTS), 
-      _conns(), 
-      _pendingFunctors(), 
-      _mutex(), 
-      _onConnection(nullptr), 
-      _onMessage(nullptr), 
+      _isLooping(false),
+      _acceptor(acceptor),
+      _ready_events(MAX_EVENTS),
+      _conns(),
+      _pendingFunctors(),
+      _mutex(),
+      _onConnection(nullptr),
+      _onMessage(nullptr),
       _onClose(nullptr)
 {
     add_epoll_read_event(_acceptor.get_listen_fd());
@@ -180,13 +180,17 @@ void EventLoop::wait_epoll_fd()
             int cur_fd = _ready_events[i].data.fd;
             if (cur_fd == _acceptor.get_listen_fd())
             {
-                handle_new_connection();
-            }else if(cur_fd == _event_fd){
-                handleReadEvent();
+                handle_new_connection();    // 处理新连接
+            }
+            else if (cur_fd == _event_fd)
+            {
+                printf("187!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+                handleReadEvent(); // 线程池处理数据 -> 通知Reactor执行IO操作
                 doPendingFunctors();
             }
             else
             {
+                printf("193!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                 handle_message(cur_fd);
             }
         }

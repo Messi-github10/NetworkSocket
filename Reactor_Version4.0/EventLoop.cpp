@@ -122,7 +122,7 @@ void EventLoop::run_in_loop(Functor &&FunctionCallBack)
         SmartMutexLock smartMutex(_mutex);
         _pendingFunctors.push_back(FunctionCallBack);
     }
-    wakeup(); // 通知IO线程
+    wakeup(); // 通知 I/O 线程
 }
 
 int EventLoop::create_epoll_fd()

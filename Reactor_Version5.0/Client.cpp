@@ -5,6 +5,7 @@
 #include <unistd.h>
 using namespace std;
 
+// 客户端
 int main()
 {
     int client_fd = socket(AF_INET, SOCK_STREAM, 0);

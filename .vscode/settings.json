@@ -48,6 +48,9 @@
         "chrono": "cpp",
         "cstring": "cpp",
         "ctime": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "semaphore": "cpp"
     }
 }

@@ -17,11 +17,7 @@ public:
 
     void process()
     {
-        if(_conn->isClosed()){
-            return;
-        }
-        
-        cout << "MyTask is running..." << endl;
+        cout << "MyTask::process() is running..." << endl;
 
         // 解码 -> 计算 -> 编码
         string response = _message;
@@ -33,39 +29,46 @@ private:
     TcpConnectionPtr _conn;
 };
 
+// 整个服务器的业务入口
 class EchoServer
 {
 public:
+    // 初始化服务器的端口、IP地址、线程池中的线程数量、任务队列长度
     EchoServer(unsigned short port, const string &ip, int threadNum, int queSize)
-    :_threadpool(threadNum, queSize)
-    ,_tcp_server(port, ip)
+        : _threadpool(threadNum, queSize), _tcp_server(port, ip)
     {
         printf("EchoServer...\n");
+
+        // 将EchoServer的成员函数绑定为回调函数
         using namespace std::placeholders;
         _tcp_server.setAllCallBacks(
-            std::bind(&EchoServer::onConnection, this, _1),
-            std::bind(&EchoServer::onMessage, this, _1),
-            std::bind(&EchoServer::onClose, this, _1));
+            std::bind(&EchoServer::onConnection, this, _1), // 连接建立回调
+            std::bind(&EchoServer::onMessage, this, _1),    // 消息到达回调
+            std::bind(&EchoServer::onClose, this, _1));     // 连接关闭回调
     }
 
-    ~EchoServer(){
+    // 关闭服务器
+    ~EchoServer()
+    {
         _threadpool.stopThreadPool();
     }
 
-    void start(){
+    // 开启服务器
+    void start()
+    {
         _threadpool.startThreadPool();
         _tcp_server.start();
     }
 
 private:
+    // 连接建立实际操作的函数
     void onConnection(TcpConnectionPtr tcp_connection_ptr)
     {
-        // 打印五元组信息
         cout << tcp_connection_ptr->toString() << "has connected." << endl;
     }
 
-    // ---------------- 数据处理 -------------------
-    // 可扩展
+    // ------------------------- 业务扩展 -----------------------------------
+    // 消息到达实际操作函数
     void onMessage(TcpConnectionPtr tcp_connection_ptr)
     {
         // 获取消息
@@ -73,11 +76,13 @@ private:
         cout << "message size is [" << message.size() << "]." << endl;
         cout << "message is [" << message << "]." << endl;
 
-        // MyTask
+        // 将处理逻辑（process方法）提交给线程池处理
         MyTask mytask(message, tcp_connection_ptr);
         _threadpool.addTask(std::bind(&MyTask::process, mytask));
     }
+    // --------------------------------------------------------------------
 
+    // 连接关闭实际操作函数
     void onClose(TcpConnectionPtr tcp_connection_ptr)
     {
         cout << tcp_connection_ptr->toString() << "has closed." << endl;
